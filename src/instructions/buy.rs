@@ -6,10 +6,10 @@
 use crate::{constants, PumpFun};
 use borsh::{BorshDeserialize, BorshSerialize};
 use solana_sdk::{
-   instruction::{AccountMeta, Instruction},
-   pubkey::Pubkey,
-   signature::Keypair,
-   signer::Signer,
+    instruction::{AccountMeta, Instruction},
+    pubkey::Pubkey,
+    signature::Keypair,
+    signer::Signer,
 };
 use spl_associated_token_account::get_associated_token_address;
 
@@ -21,25 +21,25 @@ use spl_associated_token_account::get_associated_token_address;
 /// * `max_sol_cost` - Maximum acceptable SOL cost for the purchase (slippage protection)
 #[derive(BorshSerialize, BorshDeserialize, Clone)]
 pub struct Buy {
-   pub amount: u64,
-   pub max_sol_cost: u64,
+    pub amount: u64,
+    pub max_sol_cost: u64,
 }
 
 impl Buy {
-   /// Instruction discriminator used to identify this instruction
-   pub const DISCRIMINATOR: [u8; 8] = [102, 6, 61, 18, 1, 218, 235, 234];
+    /// Instruction discriminator used to identify this instruction
+    pub const DISCRIMINATOR: [u8; 8] = [102, 6, 61, 18, 1, 218, 235, 234];
 
-   /// Serializes the instruction data with the appropriate discriminator
-   ///
-   /// # Returns
-   ///
-   /// Byte vector containing the serialized instruction data
-   pub fn data(&self) -> Vec<u8> {
-      let mut data = Vec::with_capacity(256);
-      data.extend_from_slice(&Self::DISCRIMINATOR);
-      self.serialize(&mut data).unwrap();
-      data
-   }
+    /// Serializes the instruction data with the appropriate discriminator
+    ///
+    /// # Returns
+    ///
+    /// Byte vector containing the serialized instruction data
+    pub fn data(&self) -> Vec<u8> {
+        let mut data = Vec::with_capacity(256);
+        data.extend_from_slice(&Self::DISCRIMINATOR);
+        self.serialize(&mut data).unwrap();
+        data
+    }
 }
 
 /// Creates an instruction to buy tokens from a bonding curve
@@ -77,30 +77,30 @@ impl Buy {
 /// 11. Event authority (readonly)
 /// 12. Pump.fun program ID (readonly)
 pub fn buy(
-   payer: &Keypair,
-   mint: &Pubkey,
-   fee_recipient: &Pubkey,
-   creator: &Pubkey,
-   args: Buy,
+    payer: &Keypair,
+    mint: &Pubkey,
+    fee_recipient: &Pubkey,
+    creator: &Pubkey,
+    args: Buy,
 ) -> Instruction {
-   let bonding_curve: Pubkey = PumpFun::get_bonding_curve_pda(mint).unwrap();
-   let creator_vault: Pubkey = PumpFun::get_creator_vault_pda(creator).unwrap();
-   Instruction::new_with_bytes(
-      constants::accounts::PUMPFUN,
-      &args.data(),
-      vec![
-         AccountMeta::new_readonly(PumpFun::get_global_pda(), false),
-         AccountMeta::new(*fee_recipient, false),
-         AccountMeta::new_readonly(*mint, false),
-         AccountMeta::new(bonding_curve, false),
-         AccountMeta::new(get_associated_token_address(&bonding_curve, mint), false),
-         AccountMeta::new(get_associated_token_address(&payer.pubkey(), mint), false),
-         AccountMeta::new(payer.pubkey(), true),
-         AccountMeta::new_readonly(constants::accounts::SYSTEM_PROGRAM, false),
-         AccountMeta::new_readonly(constants::accounts::TOKEN_PROGRAM, false),
-         AccountMeta::new(creator_vault, false),
-         AccountMeta::new_readonly(constants::accounts::EVENT_AUTHORITY, false),
-         AccountMeta::new_readonly(constants::accounts::PUMPFUN, false),
-      ],
-   )
+    let bonding_curve: Pubkey = PumpFun::get_bonding_curve_pda(mint).unwrap();
+    let creator_vault: Pubkey = PumpFun::get_creator_vault_pda(creator).unwrap();
+    Instruction::new_with_bytes(
+        constants::accounts::PUMPFUN,
+        &args.data(),
+        vec![
+            AccountMeta::new_readonly(PumpFun::get_global_pda(), false),
+            AccountMeta::new(*fee_recipient, false),
+            AccountMeta::new_readonly(*mint, false),
+            AccountMeta::new(bonding_curve, false),
+            AccountMeta::new(get_associated_token_address(&bonding_curve, mint), false),
+            AccountMeta::new(get_associated_token_address(&payer.pubkey(), mint), false),
+            AccountMeta::new(payer.pubkey(), true),
+            AccountMeta::new_readonly(constants::accounts::SYSTEM_PROGRAM, false),
+            AccountMeta::new_readonly(constants::accounts::TOKEN_PROGRAM, false),
+            AccountMeta::new(creator_vault, false),
+            AccountMeta::new_readonly(constants::accounts::EVENT_AUTHORITY, false),
+            AccountMeta::new_readonly(constants::accounts::PUMPFUN, false),
+        ],
+    )
 }
