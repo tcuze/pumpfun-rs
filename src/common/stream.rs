@@ -5,9 +5,9 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use futures::StreamExt;
 use serde::{Deserialize, Serialize};
 use solana_client::{
-    nonblocking::pubsub_client::PubsubClient,
-    rpc_config::{RpcTransactionLogsConfig, RpcTransactionLogsFilter},
-    rpc_response::{Response, RpcLogsResponse},
+   nonblocking::pubsub_client::PubsubClient,
+   rpc_config::{RpcTransactionLogsConfig, RpcTransactionLogsFilter},
+   rpc_response::{Response, RpcLogsResponse},
 };
 use solana_sdk::{commitment_config::CommitmentConfig, pubkey::Pubkey};
 use tokio::sync::mpsc;
@@ -22,14 +22,14 @@ use crate::{constants, error};
 /// metadata, mint address, bonding curve address, and the accounts involved.
 #[derive(BorshSerialize, BorshDeserialize, Debug, Serialize, Deserialize)]
 pub struct CreateEvent {
-    pub name: String,
-    pub symbol: String,
-    pub uri: String,
-    pub mint: Pubkey,
-    pub bonding_curve: Pubkey,
-    pub user: Pubkey,
-    pub creator: Pubkey,
-    pub timestamp: i64,
+   pub name: String,
+   pub symbol: String,
+   pub uri: String,
+   pub mint: Pubkey,
+   pub bonding_curve: Pubkey,
+   pub user: Pubkey,
+   pub creator: Pubkey,
+   pub timestamp: i64,
 }
 
 /// Event emitted when a token is bought or sold
@@ -38,16 +38,22 @@ pub struct CreateEvent {
 /// exchanged, the type of trade (buy/sell), and the updated bonding curve state.
 #[derive(BorshSerialize, BorshDeserialize, Debug, Serialize, Deserialize)]
 pub struct TradeEvent {
-    pub mint: Pubkey,
-    pub sol_amount: u64,
-    pub token_amount: u64,
-    pub is_buy: bool,
-    pub user: Pubkey,
-    pub timestamp: i64,
-    pub virtual_sol_reserves: u64,
-    pub virtual_token_reserves: u64,
-    pub real_sol_reserves: u64,
-    pub real_token_reserves: u64,
+   pub mint: Pubkey,
+   pub sol_amount: u64,
+   pub token_amount: u64,
+   pub is_buy: bool,
+   pub user: Pubkey,
+   pub timestamp: i64,
+   pub virtual_sol_reserves: u64,
+   pub virtual_token_reserves: u64,
+   pub real_sol_reserves: u64,
+   pub real_token_reserves: u64,
+   pub fee_recipient: Pubkey,
+   pub fee_basis_points: u64,
+   pub fee: u64,
+   pub creator: Pubkey,
+   pub creator_fee_basis_points: u64,
+   pub creator_fee: u64,
 }
 
 /// Event emitted when a bonding curve operation completes
@@ -56,10 +62,10 @@ pub struct TradeEvent {
 /// providing information about the involved accounts.
 #[derive(BorshSerialize, BorshDeserialize, Debug, Serialize, Deserialize)]
 pub struct CompleteEvent {
-    pub user: Pubkey,
-    pub mint: Pubkey,
-    pub bonding_curve: Pubkey,
-    pub timestamp: i64,
+   pub user: Pubkey,
+   pub mint: Pubkey,
+   pub bonding_curve: Pubkey,
+   pub timestamp: i64,
 }
 
 /// Event emitted when global parameters are updated
@@ -68,12 +74,12 @@ pub struct CompleteEvent {
 /// including fee settings and initial bonding curve configuration values.
 #[derive(BorshSerialize, BorshDeserialize, Debug, Serialize, Deserialize)]
 pub struct SetParamsEvent {
-    pub fee_recipient: Pubkey,
-    pub initial_virtual_token_reserves: u64,
-    pub initial_virtual_sol_reserves: u64,
-    pub initial_real_token_reserves: u64,
-    pub token_total_supply: u64,
-    pub fee_basis_points: u64,
+   pub fee_recipient: Pubkey,
+   pub initial_virtual_token_reserves: u64,
+   pub initial_virtual_sol_reserves: u64,
+   pub initial_real_token_reserves: u64,
+   pub token_total_supply: u64,
+   pub fee_basis_points: u64,
 }
 
 /// Enum representing all possible event types emitted by the Pump.fun program
@@ -82,10 +88,10 @@ pub struct SetParamsEvent {
 /// emitted by the program. It's used to provide a unified type for event handlers.
 #[derive(Debug, Serialize, Deserialize)]
 pub enum PumpFunEvent {
-    Create(CreateEvent),
-    Trade(TradeEvent),
-    Complete(CompleteEvent),
-    SetParams(SetParamsEvent),
+   Create(CreateEvent),
+   Trade(TradeEvent),
+   Complete(CompleteEvent),
+   SetParams(SetParamsEvent),
 }
 
 /// Represents an active WebSocket subscription to Pump.fun events
@@ -93,21 +99,21 @@ pub enum PumpFunEvent {
 /// This struct manages the lifecycle of an event subscription, automatically
 /// unsubscribing when dropped to ensure proper cleanup of resources.
 pub struct Subscription {
-    pub task: JoinHandle<()>,
-    pub unsubscribe: Box<dyn Fn() + Send>,
+   pub task: JoinHandle<()>,
+   pub unsubscribe: Box<dyn Fn() + Send>,
 }
 
 impl Subscription {
-    pub fn new(task: JoinHandle<()>, unsubscribe: Box<dyn Fn() + Send>) -> Self {
-        Subscription { task, unsubscribe }
-    }
+   pub fn new(task: JoinHandle<()>, unsubscribe: Box<dyn Fn() + Send>) -> Self {
+      Subscription { task, unsubscribe }
+   }
 }
 
 impl Drop for Subscription {
-    fn drop(&mut self) {
-        (self.unsubscribe)();
-        self.task.abort();
-    }
+   fn drop(&mut self) {
+      (self.unsubscribe)();
+      self.task.abort();
+   }
 }
 
 /// Parses base64-encoded program log data into a structured PumpFunEvent
@@ -125,34 +131,34 @@ impl Drop for Subscription {
 ///
 /// Returns a parsed PumpFunEvent if successful, or an error if parsing fails
 pub fn parse_event(signature: &str, data: &str) -> Result<PumpFunEvent, Box<dyn Error>> {
-    // Decode base64
-    let decoded = base64::engine::general_purpose::STANDARD.decode(data)?;
+   // Decode base64
+   let decoded = base64::engine::general_purpose::STANDARD.decode(data)?;
 
-    // Get event type from the first 8 bytes
-    if decoded.len() < 8 {
-        return Err(format!("Data too short to contain discriminator: {}", data).into());
-    }
+   // Get event type from the first 8 bytes
+   if decoded.len() < 8 {
+      return Err(format!("Data too short to contain discriminator: {}", data).into());
+   }
 
-    let discriminator = &decoded[..8];
-    match discriminator {
-        // CreateEvent
-        [27, 114, 169, 77, 222, 235, 99, 118] => Ok(PumpFunEvent::Create(
-            CreateEvent::try_from_slice(&decoded[8..])?,
-        )),
-        // TradeEvent
-        [189, 219, 127, 211, 78, 230, 97, 238] => Ok(PumpFunEvent::Trade(
-            TradeEvent::try_from_slice(&decoded[8..])?,
-        )),
-        // CompleteEvent
-        [95, 114, 97, 156, 212, 46, 152, 8] => Ok(PumpFunEvent::Complete(
-            CompleteEvent::try_from_slice(&decoded[8..])?,
-        )),
-        // SetParamsEvent
-        [223, 195, 159, 246, 62, 48, 143, 131] => Ok(PumpFunEvent::SetParams(
-            SetParamsEvent::try_from_slice(&decoded[8..])?,
-        )),
-        _ => Err(format!("Unknown event: signature={} data={}", signature, data).into()),
-    }
+   let discriminator = &decoded[..8];
+   match discriminator {
+      // CreateEvent
+      [27, 114, 169, 77, 222, 235, 99, 118] => Ok(PumpFunEvent::Create(
+         CreateEvent::try_from_slice(&decoded[8..])?,
+      )),
+      // TradeEvent
+      [189, 219, 127, 211, 78, 230, 97, 238] => Ok(PumpFunEvent::Trade(
+         TradeEvent::try_from_slice(&decoded[8..])?,
+      )),
+      // CompleteEvent
+      [95, 114, 97, 156, 212, 46, 152, 8] => Ok(PumpFunEvent::Complete(
+         CompleteEvent::try_from_slice(&decoded[8..])?,
+      )),
+      // SetParamsEvent
+      [223, 195, 159, 246, 62, 48, 143, 131] => Ok(PumpFunEvent::SetParams(
+         SetParamsEvent::try_from_slice(&decoded[8..])?,
+      )),
+      _ => Err(format!("Unknown event: signature={} data={}", signature, data).into()),
+   }
 }
 
 /// Subscribes to Pump.fun program events emitted on-chain
@@ -220,129 +226,129 @@ pub fn parse_event(signature: &str, data: &str) -> Result<PumpFunEvent, Box<dyn 
 /// }
 /// ```
 pub async fn subscribe<F>(
-    cluster: Cluster,
-    commitment: Option<CommitmentConfig>,
-    callback: F,
+   cluster: Cluster,
+   commitment: Option<CommitmentConfig>,
+   callback: F,
 ) -> Result<Subscription, error::ClientError>
 where
-    F: Fn(String, Option<PumpFunEvent>, Option<Box<dyn Error>>, Response<RpcLogsResponse>)
-        + Send
-        + Sync
-        + 'static,
+   F: Fn(String, Option<PumpFunEvent>, Option<Box<dyn Error>>, Response<RpcLogsResponse>)
+      + Send
+      + Sync
+      + 'static,
 {
-    // Initialize PubsubClient
-    let ws_url = &cluster.rpc.ws;
-    let pubsub_client = PubsubClient::new(ws_url)
-        .await
-        .map_err(error::ClientError::PubsubClientError)?;
+   // Initialize PubsubClient
+   let ws_url = &cluster.rpc.ws;
+   let pubsub_client = PubsubClient::new(ws_url)
+      .await
+      .map_err(error::ClientError::PubsubClientError)?;
 
-    let (tx, _) = mpsc::channel(1);
+   let (tx, _) = mpsc::channel(1);
 
-    let task = tokio::spawn(async move {
-        // Subscribe to logs for the program
-        let (mut stream, _unsubscribe) = pubsub_client
-            .logs_subscribe(
-                RpcTransactionLogsFilter::Mentions(vec![constants::accounts::PUMPFUN.to_string()]),
-                RpcTransactionLogsConfig {
-                    commitment: Some(commitment.unwrap_or(cluster.commitment)),
-                },
-            )
-            .await
-            .unwrap();
+   let task = tokio::spawn(async move {
+      // Subscribe to logs for the program
+      let (mut stream, _unsubscribe) = pubsub_client
+         .logs_subscribe(
+            RpcTransactionLogsFilter::Mentions(vec![constants::accounts::PUMPFUN.to_string()]),
+            RpcTransactionLogsConfig {
+               commitment: Some(commitment.unwrap_or(cluster.commitment)),
+            },
+         )
+         .await
+         .unwrap();
 
-        // Process incoming logs
-        while let Some(log) = stream.next().await {
-            // Get the signature of the transaction
-            let signature = log.value.signature.clone();
-            // Check for logs with "Program data:" prefix
-            for log_line in log.value.logs.clone() {
-                if log_line.starts_with("Program data:") {
-                    // Extract base64-encoded data
-                    let data = log_line.replace("Program data: ", "").trim().to_string();
-                    match parse_event(&signature, &data) {
-                        Ok(event) => callback(signature.clone(), Some(event), None, log.clone()),
-                        Err(err) => callback(signature.clone(), None, Some(err), log.clone()),
-                    }
-                }
+      // Process incoming logs
+      while let Some(log) = stream.next().await {
+         // Get the signature of the transaction
+         let signature = log.value.signature.clone();
+         // Check for logs with "Program data:" prefix
+         for log_line in log.value.logs.clone() {
+            if log_line.starts_with("Program data:") {
+               // Extract base64-encoded data
+               let data = log_line.replace("Program data: ", "").trim().to_string();
+               match parse_event(&signature, &data) {
+                  Ok(event) => callback(signature.clone(), Some(event), None, log.clone()),
+                  Err(err) => callback(signature.clone(), None, Some(err), log.clone()),
+               }
             }
-        }
-    });
+         }
+      }
+   });
 
-    Ok(Subscription::new(
-        task,
-        Box::new(move || {
-            let _ = tx.try_send(());
-        }),
-    ))
+   Ok(Subscription::new(
+      task,
+      Box::new(move || {
+         let _ = tx.try_send(());
+      }),
+   ))
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::common::types::PriorityFee;
+   use crate::common::types::PriorityFee;
 
-    use super::*;
-    use std::sync::Arc;
-    use tokio::sync::Mutex;
-    use tokio::time::{timeout, Duration};
+   use super::*;
+   use std::sync::Arc;
+   use tokio::sync::Mutex;
+   use tokio::time::{timeout, Duration};
 
-    #[cfg(not(skip_expensive_tests))]
-    #[tokio::test]
-    async fn test_subscribe() {
-        if std::env::var("SKIP_EXPENSIVE_TESTS").is_ok() {
-            return;
-        }
+   #[cfg(not(skip_expensive_tests))]
+   #[tokio::test]
+   async fn test_subscribe() {
+      if std::env::var("SKIP_EXPENSIVE_TESTS").is_ok() {
+         return;
+      }
 
-        // Define the cluster
-        let cluster = Cluster::mainnet(CommitmentConfig::processed(), PriorityFee::default());
+      // Define the cluster
+      let cluster = Cluster::mainnet(CommitmentConfig::processed(), PriorityFee::default());
 
-        // Shared vector to collect events
-        let events: Arc<Mutex<Vec<PumpFunEvent>>> = Arc::new(Mutex::new(Vec::new()));
+      // Shared vector to collect events
+      let events: Arc<Mutex<Vec<PumpFunEvent>>> = Arc::new(Mutex::new(Vec::new()));
 
-        // Define the callback to store events
-        let callback = {
-            let events = Arc::clone(&events);
-            move |signature: String,
-                  event: Option<PumpFunEvent>,
-                  err: Option<Box<dyn Error>>,
-                  _: Response<RpcLogsResponse>| {
-                if let Some(event) = event {
-                    let events = Arc::clone(&events);
-                    tokio::spawn(async move {
-                        let mut events = events.lock().await;
-                        events.push(event);
-                    });
-                } else if err.is_some() {
-                    eprintln!("Error in subscription: signature={}", signature);
-                }
+      // Define the callback to store events
+      let callback = {
+         let events = Arc::clone(&events);
+         move |signature: String,
+               event: Option<PumpFunEvent>,
+               err: Option<Box<dyn Error>>,
+               _: Response<RpcLogsResponse>| {
+            if let Some(event) = event {
+               let events = Arc::clone(&events);
+               tokio::spawn(async move {
+                  let mut events = events.lock().await;
+                  events.push(event);
+               });
+            } else if err.is_some() {
+               eprintln!("Error in subscription: signature={}", signature);
             }
-        };
+         }
+      };
 
-        // Start the subscription
-        let subscription = subscribe(cluster, None, callback)
-            .await
-            .expect("Failed to start subscription");
+      // Start the subscription
+      let subscription = subscribe(cluster, None, callback)
+         .await
+         .expect("Failed to start subscription");
 
-        // Wait for 30 seconds to collect events
-        let wait_duration = Duration::from_secs(30);
-        timeout(wait_duration, async {
-            loop {
-                tokio::time::sleep(Duration::from_secs(1)).await;
-            }
-        })
-        .await
-        .unwrap_err(); // Expect a timeout error to end the waiting period
+      // Wait for 30 seconds to collect events
+      let wait_duration = Duration::from_secs(30);
+      timeout(wait_duration, async {
+         loop {
+            tokio::time::sleep(Duration::from_secs(1)).await;
+         }
+      })
+      .await
+      .unwrap_err(); // Expect a timeout error to end the waiting period
 
-        // Clean up the subscription
-        drop(subscription);
+      // Clean up the subscription
+      drop(subscription);
 
-        // Verify that at least one event was received
-        let events = events.lock().await;
-        assert!(
-            !events.is_empty(),
-            "No events received within {} seconds",
-            wait_duration.as_secs()
-        );
+      // Verify that at least one event was received
+      let events = events.lock().await;
+      assert!(
+         !events.is_empty(),
+         "No events received within {} seconds",
+         wait_duration.as_secs()
+      );
 
-        println!("Received {} events", events.len());
-    }
+      println!("Received {} events", events.len());
+   }
 }
