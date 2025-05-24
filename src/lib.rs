@@ -1179,7 +1179,7 @@ impl PumpFun {
     /// #
     /// let creator = pubkey!("Amya8kr2bzEY9kyXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
     /// if let Some(bonding_curve) = PumpFun::get_creator_vault_pda(&creator) {
-    ///     println!("Creator vault address: {}", creator vault);
+    ///     println!("Creator vault address: {}", creator);
     /// }
     /// ```
     pub fn get_creator_vault_pda(creator: &Pubkey) -> Option<Pubkey> {
