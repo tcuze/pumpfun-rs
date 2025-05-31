@@ -182,7 +182,7 @@ pub fn parse_event(signature: &str, data: &str) -> Result<PumpFunEvent, Box<dyn 
 ///
 /// * `cluster` - Solana cluster configuration containing RPC endpoints
 /// * `commitment` - Optional commitment level for the subscription. If None, uses the
-///                  default from the cluster configuration
+///   default from the cluster configuration
 /// * `callback` - A function that will be called for each event with the following parameters:
 ///   * `signature`: The transaction signature as a String
 ///   * `event`: The parsed PumpFunEvent if successful, or None if parsing failed

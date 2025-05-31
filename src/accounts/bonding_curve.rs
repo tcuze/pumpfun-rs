@@ -60,6 +60,7 @@ impl BondingCurveAccount {
     /// * `real_sol_reserves` - Actual SOL reserves available
     /// * `token_total_supply` - Total supply of tokens
     /// * `complete` - Whether the curve is complete
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         discriminator: u64,
         virtual_token_reserves: u64,
