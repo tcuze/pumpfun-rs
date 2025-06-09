@@ -754,8 +754,8 @@ impl PumpFun {
         mint: Pubkey,
         amount_sol: u64,
         slippage_basis_points: Option<u64>,
-        global_account: GlobalAccount,
-        bonding_curve_account: BondingCurveAccount
+        global_account: &GlobalAccount,
+        bonding_curve_account: &BondingCurveAccount
     ) -> Result<Vec<Instruction>, error::ClientError> {
         // Get accounts and calculate buy amounts
         let buy_amount = bonding_curve_account
