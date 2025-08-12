@@ -1199,7 +1199,7 @@ impl PumpFun {
     pub fn get_user_volume_accumulator_pda(user: &Pubkey) -> Pubkey {
         let (user_volume_accumulator, _bump) = Pubkey::find_program_address(
             &[b"user_volume_accumulator", user.as_ref()],
-            &Pubkey::from_str_const("6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P"),
+            &constants::accounts::PUMPFUN,
         );
         user_volume_accumulator
     }
