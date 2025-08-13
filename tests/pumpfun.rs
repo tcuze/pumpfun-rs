@@ -2,7 +2,7 @@ pub mod utils;
 
 use pumpfun::utils::CreateTokenMetadata;
 use serial_test::serial;
-use solana_sdk::{native_token::sol_to_lamports, signer::Signer};
+use solana_sdk::{native_token::sol_str_to_lamports, signer::Signer};
 use tempfile::TempDir;
 use utils::TestContext;
 
@@ -84,7 +84,7 @@ async fn test_03_buy_token() {
 
     let signature = ctx
         .client
-        .buy(mint, sol_to_lamports(1f64), None, None)
+        .buy(mint, sol_str_to_lamports("1.0").unwrap(), None, None)
         .await
         .expect("Failed to buy tokens");
     println!("Signature: {}", signature);
