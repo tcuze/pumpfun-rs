@@ -30,17 +30,16 @@ base64 = { version = "0.22.1", optional = true }
 borsh = { version = "1.5.7", features = ["derive"] }
 futures = { version = "0.3.31", optional = true }
 isahc = "1.7.2"
-mpl-token-metadata = "5.1.0"
 serde = { version = "1.0.215", features = ["derive"] }
 serde_json = "1.0.132"
-solana-client = "2.2.7"
-solana-sdk = "2.2.2"
+solana-client = "2.3.7"
+solana-sdk = "2.3.1"
 spl-associated-token-account = "7.0.0"
 spl-token = "8.0.0"
-tokio = "1.44.2"
+tokio = "1.47.1"
 
 [dev-dependencies]
 dirs = "6.0.0"
 serial_test = "3.2.0"
-tempfile = "3.19.1"
+tempfile = "3.20.0"
 tokio-test = "0.4.4"
