@@ -30,10 +30,10 @@ pub struct CreateEvent {
     pub user: Pubkey,
     pub creator: Pubkey,
     pub timestamp: i64,
-    pub virtual_sol_reserves: u64,
     pub virtual_token_reserves: u64,
-    pub real_sol_reserves: u64,
+    pub virtual_sol_reserves: u64,
     pub real_token_reserves: u64,
+    pub token_total_supply: u64,
 }
 
 /// Event emitted when a token is bought or sold
@@ -58,6 +58,11 @@ pub struct TradeEvent {
     pub creator: Pubkey,
     pub creator_fee_basis_points: u64,
     pub creator_fee: u64,
+    pub track_volume: bool,
+    pub total_unclaimed_tokens: u64,
+    pub total_claimed_tokens: u64,
+    pub current_sol_volume: u64,
+    pub last_update_timestamp: i64,
 }
 
 /// Event emitted when a bonding curve operation completes
@@ -78,12 +83,20 @@ pub struct CompleteEvent {
 /// including fee settings and initial bonding curve configuration values.
 #[derive(BorshSerialize, BorshDeserialize, Debug, Serialize, Deserialize)]
 pub struct SetParamsEvent {
-    pub fee_recipient: Pubkey,
     pub initial_virtual_token_reserves: u64,
     pub initial_virtual_sol_reserves: u64,
     pub initial_real_token_reserves: u64,
+    pub final_real_sol_reserves: u64,
     pub token_total_supply: u64,
     pub fee_basis_points: u64,
+    pub withdraw_authority: Pubkey,
+    pub enable_migrate: bool,
+    pub pool_migration_fee: u64,
+    pub creator_fee_basis_points: u64,
+    pub fee_recipients: [Pubkey; 8],
+    pub timestamp: i64,
+    pub set_creator_authority: Pubkey,
+    pub admin_set_creator_authority: Pubkey,
 }
 
 /// Enum representing all possible event types emitted by the Pump.fun program
