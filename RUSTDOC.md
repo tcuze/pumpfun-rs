@@ -162,16 +162,16 @@ To customize feature flags in your `Cargo.toml`:
 
 ```toml
 # Use default features (create-ata and close-ata enabled)
-pumpfun = "4.3.2"
+pumpfun = "4.4.0"
 
 # Disable all default features
-pumpfun = { version = "4.3.2", default-features = false }
+pumpfun = { version = "4.4.0", default-features = false }
 
 # Custom selection of features
-pumpfun = { version = "4.3.2", default-features = false, features = ["versioned-tx"] }
+pumpfun = { version = "4.4.0", default-features = false, features = ["versioned-tx"] }
 
 # Enable WebSocket event subscriptions
-pumpfun = { version = "4.3.2", features = ["stream"] }
+pumpfun = { version = "4.4.0", features = ["stream"] }
 ```
 
 ## Architecture
