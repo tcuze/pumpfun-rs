@@ -109,6 +109,8 @@ pub enum PumpFunEvent {
     Trade(TradeEvent),
     Complete(CompleteEvent),
     SetParams(SetParamsEvent),
+    Unhandled(String, Vec<u8>), // For unhandled events
+    Unknown(String, Vec<u8>),   // For unknown events
 }
 
 /// Represents an active WebSocket subscription to Pump.fun events
@@ -178,7 +180,24 @@ pub fn parse_event(signature: &str, data: &str) -> Result<PumpFunEvent, Box<dyn 
             SetParamsEvent::try_from_slice(&decoded[8..])
                 .map_err(|e| format!("Failed to decode SetParamsEvent: {}", e))?,
         )),
-        _ => Err(format!("Unknown event: signature={} data={}", signature, data).into()),
+        // Other unhandled Pump.fun events
+        [64, 69, 192, 104, 29, 30, 25, 107]
+        | [245, 59, 70, 34, 75, 185, 109, 92]
+        | [147, 250, 108, 120, 247, 29, 67, 222]
+        | [79, 172, 246, 49, 205, 91, 206, 232]
+        | [146, 159, 189, 172, 146, 88, 56, 244]
+        | [122, 2, 127, 1, 14, 191, 12, 175]
+        | [189, 233, 93, 185, 92, 148, 234, 148]
+        | [97, 97, 215, 144, 93, 146, 22, 124]
+        | [134, 36, 13, 72, 232, 101, 130, 216]
+        | [237, 52, 123, 37, 245, 251, 72, 210]
+        | [142, 203, 6, 32, 127, 105, 191, 162]
+        | [197, 122, 167, 124, 116, 81, 91, 255]
+        | [182, 195, 137, 42, 35, 206, 207, 247] => {
+            Ok(PumpFunEvent::Unhandled(signature.to_string(), decoded))
+        }
+        // Unknown event type
+        _ => Ok(PumpFunEvent::Unknown(signature.to_string(), decoded)),
     }
 }
 
