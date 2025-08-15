@@ -755,14 +755,17 @@ impl PumpFun {
     ) -> Result<Vec<Instruction>, error::ClientError> {
         // Get accounts and calculate buy amounts
         let global_account = self.get_global_account().await?;
+        let mut bonding_curve_account: Option<accounts::BondingCurveAccount> = None;
         let buy_amount = {
             let bonding_curve_pda = Self::get_bonding_curve_pda(&mint)
                 .ok_or(error::ClientError::BondingCurveNotFound)?;
             if self.rpc.get_account(&bonding_curve_pda).await.is_err() {
                 global_account.get_initial_buy_price(amount_sol)
             } else {
-                let bonding_curve_account = self.get_bonding_curve_account(&mint).await?;
+                bonding_curve_account = self.get_bonding_curve_account(&mint).await.ok();
                 bonding_curve_account
+                    .as_ref()
+                    .unwrap()
                     .get_buy_price(amount_sol)
                     .map_err(error::ClientError::BondingCurveError)?
             }
@@ -791,7 +794,7 @@ impl PumpFun {
             &self.payer,
             &mint,
             &global_account.fee_recipient,
-            &self.payer.pubkey(),
+            &bonding_curve_account.map_or(self.payer.pubkey(), |bc| bc.creator),
             instructions::Buy {
                 amount: buy_amount,
                 max_sol_cost: buy_amount_with_slippage,
