@@ -512,6 +512,7 @@ impl PumpFun {
     ///
     /// # Arguments
     ///
+    /// * `mentioned` - Optional public key to filter events by mentions. If None, subscribes to all Pump.fun events
     /// * `commitment` - Optional commitment level for the subscription. If None, uses the
     ///   default from the cluster configuration
     /// * `callback` - A function that will be called for each event with the following parameters:
@@ -579,6 +580,7 @@ impl PumpFun {
     #[cfg(feature = "stream")]
     pub async fn subscribe<F>(
         &self,
+        mentioned: Option<String>,
         commitment: Option<solana_sdk::commitment_config::CommitmentConfig>,
         callback: F,
     ) -> Result<common::stream::Subscription, error::ClientError>
@@ -586,13 +588,13 @@ impl PumpFun {
         F: Fn(
                 String,
                 Option<common::stream::PumpFunEvent>,
-                Option<Box<dyn std::error::Error>>,
+                Option<Box<dyn std::error::Error + Send + Sync>>,
                 solana_client::rpc_response::Response<solana_client::rpc_response::RpcLogsResponse>,
             ) + Send
             + Sync
             + 'static,
     {
-        common::stream::subscribe(self.cluster.clone(), commitment, callback).await
+        common::stream::subscribe(self.cluster.clone(), mentioned, commitment, callback).await
     }
 
     /// Creates compute budget instructions for priority fees
