@@ -1,34 +1,19 @@
 name: Publish to crates.io
 
 on:
+  workflow_run:
+    workflows: ["Test"]
+    branches: [master]
+    types:
+      - completed
   push:
     tags:
       - "v*"
 
 jobs:
-  test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-      - name: Install OpenSSL on Windows
-        if: matrix.os == 'windows-latest'
-        shell: powershell
-        run: |
-          echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
-          vcpkg install openssl:x64-windows-static-md
-      - run: cargo test -F versioned-tx,stream -- --skip expensive
-        env:
-          SKIP_EXPENSIVE_TESTS: 1
-
   publish:
-    needs: test
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1

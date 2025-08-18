@@ -800,10 +800,21 @@ impl PumpFun {
     ) -> Result<Vec<Instruction>, error::ClientError> {
         // Get accounts and calculate buy amounts
         let global_account = self.get_global_account().await?;
-        let bonding_curve_account = self.get_bonding_curve_account(&mint).await?;
-        let buy_amount = bonding_curve_account
-            .get_buy_price(amount_sol)
-            .map_err(error::ClientError::BondingCurveError)?;
+        let mut bonding_curve_account: Option<accounts::BondingCurveAccount> = None;
+        let buy_amount = {
+            let bonding_curve_pda = Self::get_bonding_curve_pda(&mint)
+                .ok_or(error::ClientError::BondingCurveNotFound)?;
+            if self.rpc.get_account(&bonding_curve_pda).await.is_err() {
+                global_account.get_initial_buy_price(amount_sol)
+            } else {
+                bonding_curve_account = self.get_bonding_curve_account(&mint).await.ok();
+                bonding_curve_account
+                    .as_ref()
+                    .unwrap()
+                    .get_buy_price(amount_sol)
+                    .map_err(error::ClientError::BondingCurveError)?
+            }
+        };
         let buy_amount_with_slippage =
             utils::calculate_with_slippage_buy(amount_sol, slippage_basis_points.unwrap_or(500));
 
@@ -828,7 +839,7 @@ impl PumpFun {
             &self.payer,
             &mint,
             &global_account.fee_recipient,
-            &bonding_curve_account.creator,
+            &bonding_curve_account.map_or(self.payer.pubkey(), |bc| bc.creator),
             instructions::Buy {
                 amount: buy_amount,
                 max_sol_cost: buy_amount_with_slippage,
@@ -1232,5 +1243,20 @@ impl PumpFun {
         let program_id: &Pubkey = &constants::accounts::PUMPFUN;
         let pda: Option<(Pubkey, u8)> = Pubkey::try_find_program_address(seeds, program_id);
         pda.map(|pubkey| pubkey.0)
+    }
+
+    /// Returns the PDA of a user volume accumulator account.
+    ///
+    /// # Arguments
+    /// * `user` - Public key of the user.
+    ///
+    /// # Returns
+    /// PDA of the corresponding user volume accumulator account.
+    pub fn get_user_volume_accumulator_pda(user: &Pubkey) -> Pubkey {
+        let (user_volume_accumulator, _bump) = Pubkey::find_program_address(
+            &[b"user_volume_accumulator", user.as_ref()],
+            &constants::accounts::PUMPFUN,
+        );
+        user_volume_accumulator
     }
 }
