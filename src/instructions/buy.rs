@@ -3,7 +3,7 @@
 //! This module provides the functionality to buy tokens from bonding curves.
 //! It includes the instruction data structure and helper function to build the Solana instruction.
 
-use crate::{constants, PumpFun};
+use crate::{constants::{self, accounts::{FEE_CONFIG, FEE_PROGRAM}}, PumpFun};
 use borsh::{BorshDeserialize, BorshSerialize};
 use solana_sdk::{
     instruction::{AccountMeta, Instruction},
@@ -108,6 +108,8 @@ pub fn buy(
                 PumpFun::get_user_volume_accumulator_pda(&payer.pubkey()),
                 false,
             ),
+            AccountMeta::new_readonly(FEE_CONFIG, false),
+            AccountMeta::new_readonly(FEE_PROGRAM, false),
         ],
     )
 }
