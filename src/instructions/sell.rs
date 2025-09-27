@@ -103,11 +103,6 @@ pub fn sell(
             AccountMeta::new_readonly(constants::accounts::TOKEN_PROGRAM, false),
             AccountMeta::new_readonly(constants::accounts::EVENT_AUTHORITY, false),
             AccountMeta::new_readonly(constants::accounts::PUMPFUN, false),
-            AccountMeta::new(constants::accounts::GLOBAL_VOLUME_ACCUMULATOR, false),
-            AccountMeta::new(
-                PumpFun::get_user_volume_accumulator_pda(&payer.pubkey()),
-                false,
-            ),
             AccountMeta::new_readonly(constants::accounts::FEE_CONFIG, false),
             AccountMeta::new_readonly(constants::accounts::FEE_PROGRAM, false),
         ],
