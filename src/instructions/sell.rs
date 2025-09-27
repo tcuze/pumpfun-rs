@@ -108,8 +108,8 @@ pub fn sell(
                 PumpFun::get_user_volume_accumulator_pda(&payer.pubkey()),
                 false,
             ),
-            AccountMeta::new_readonly(FEE_CONFIG, false),
-            AccountMeta::new_readonly(FEE_PROGRAM, false),
+            AccountMeta::new_readonly(constants::accounts::FEE_CONFIG, false),
+            AccountMeta::new_readonly(constants::accounts::FEE_PROGRAM, false),
         ],
     )
 }
