@@ -1,5 +1,22 @@
 # Contributing to PumpFun Rust SDK
 
+<!--toc:start-->
+
+- [Contributing to PumpFun Rust SDK](#contributing-to-pumpfun-rust-sdk)
+  - [Getting Started](#getting-started)
+  - [Development Setup](#development-setup)
+    - [Using the Test Validator](#using-the-test-validator)
+  - [Making Changes](#making-changes)
+  - [Pull Request Process](#pull-request-process)
+  - [Code Style](#code-style)
+  - [Testing](#testing)
+  - [Documentation](#documentation)
+  - [Test Validator Maintenance](#test-validator-maintenance)
+  - [Questions or Problems?](#questions-or-problems)
+  - [License](#license)
+
+<!--toc:end-->
+
 Thank you for your interest in contributing to the PumpFun Rust SDK! This document provides guidelines and instructions for contributing.
 
 ## Getting Started
@@ -43,7 +60,7 @@ Options:
 
 The validator runs on:
 
-- RPC: http://127.0.0.1:8899
+- RPC: <http://127.0.0.1:8899>
 - WebSocket: ws://127.0.0.1:8900
 
 You can connect the SDK to this local validator for development:

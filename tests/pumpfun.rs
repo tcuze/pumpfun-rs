@@ -81,10 +81,17 @@ async fn test_03_buy_token() {
 
     let ctx = TestContext::default();
     let mint = ctx.mint.pubkey();
+    let track_volume = Some(true);
 
     let signature = ctx
         .client
-        .buy(mint, sol_str_to_lamports("1.0").unwrap(), None, None)
+        .buy(
+            mint,
+            sol_str_to_lamports("1.0").unwrap(),
+            track_volume,
+            None,
+            None,
+        )
         .await
         .expect("Failed to buy tokens");
     println!("Signature: {}", signature);

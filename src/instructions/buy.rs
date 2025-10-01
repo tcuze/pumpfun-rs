@@ -19,10 +19,12 @@ use spl_associated_token_account::get_associated_token_address;
 ///
 /// * `amount` - Amount of tokens to buy (in token smallest units)
 /// * `max_sol_cost` - Maximum acceptable SOL cost for the purchase (slippage protection)
+/// * `track_volume` - Whether to track this purchase in volume accumulators
 #[derive(BorshSerialize, BorshDeserialize, Clone)]
 pub struct Buy {
     pub amount: u64,
     pub max_sol_cost: u64,
+    pub track_volume: Option<bool>,
 }
 
 impl Buy {
@@ -78,6 +80,8 @@ impl Buy {
 /// 12. Pump.fun program ID (readonly)
 /// 13. Global volume accumulator (writable)
 /// 14. User volume accumulator (writable)
+/// 15. Fee configuration account (readonly)
+/// 16. Fee configuration program ID (readonly)
 pub fn buy(
     payer: &Keypair,
     mint: &Pubkey,
@@ -108,6 +112,8 @@ pub fn buy(
                 PumpFun::get_user_volume_accumulator_pda(&payer.pubkey()),
                 false,
             ),
+            AccountMeta::new_readonly(constants::accounts::FEE_CONFIG, false),
+            AccountMeta::new_readonly(constants::accounts::FEE_CONFIG_PROGRAM, false),
         ],
     )
 }

@@ -249,8 +249,9 @@ impl PumpFun {
     /// // Create token and buy 0.1 SOL worth with 5% slippage tolerance
     /// let amount_sol = sol_to_lamports(0.1f64); // 0.1 SOL in lamports
     /// let slippage_bps = Some(500); // 5%
+    /// let track_volume = Some(true); // Track this initial buy in volume stats
     ///
-    /// let signature = client.create_and_buy(mint, metadata, amount_sol, slippage_bps, None).await?;
+    /// let signature = client.create_and_buy(mint, metadata, amount_sol, track_volume, slippage_bps, None).await?;
     /// println!("Token created and bought! Signature: {}", signature);
     /// # Ok(())
     /// # }
@@ -260,6 +261,7 @@ impl PumpFun {
         mint: Keypair,
         metadata: utils::CreateTokenMetadata,
         amount_sol: u64,
+        track_volume: Option<bool>,
         slippage_basis_points: Option<u64>,
         priority_fee: Option<PriorityFee>,
     ) -> Result<Signature, error::ClientError> {
@@ -278,7 +280,12 @@ impl PumpFun {
 
         // Add buy instruction
         let buy_ix = self
-            .get_buy_instructions(mint.pubkey(), amount_sol, slippage_basis_points)
+            .get_buy_instructions(
+                mint.pubkey(),
+                amount_sol,
+                track_volume,
+                slippage_basis_points,
+            )
             .await?;
         instructions.extend(buy_ix);
 
@@ -354,8 +361,9 @@ impl PumpFun {
     /// // Buy 0.01 SOL worth of tokens with 3% max slippage
     /// let amount_sol = sol_to_lamports(0.01f64); // 0.01 SOL in lamports
     /// let slippage_bps = Some(300); // 3%
+    /// let track_volume = Some(true); // Track this buy in volume stats
     ///
-    /// let signature = client.buy(token_mint, amount_sol, slippage_bps, None).await?;
+    /// let signature = client.buy(token_mint, amount_sol, track_volume, slippage_bps, None).await?;
     /// println!("Tokens purchased! Signature: {}", signature);
     /// # Ok(())
     /// # }
@@ -364,6 +372,7 @@ impl PumpFun {
         &self,
         mint: Pubkey,
         amount_sol: u64,
+        track_volume: Option<bool>,
         slippage_basis_points: Option<u64>,
         priority_fee: Option<PriorityFee>,
     ) -> Result<Signature, error::ClientError> {
@@ -373,7 +382,7 @@ impl PumpFun {
 
         // Add buy instruction
         let buy_ix = self
-            .get_buy_instructions(mint, amount_sol, slippage_basis_points)
+            .get_buy_instructions(mint, amount_sol, track_volume, slippage_basis_points)
             .await?;
         instructions.extend(buy_ix);
 
@@ -742,8 +751,9 @@ impl PumpFun {
     /// let mint = pubkey!("TokenM1ntPubk3yXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
     /// let amount_sol = sol_to_lamports(0.01); // 0.01 SOL
     /// let slippage_bps = Some(300); // 3%
+    /// let track_volume = Some(true); // Track this buy in volume stats
     ///
-    /// let buy_instructions = client.get_buy_instructions(mint, amount_sol, slippage_bps).await?;
+    /// let buy_instructions = client.get_buy_instructions(mint, amount_sol, track_volume, slippage_bps).await?;
     /// # Ok(())
     /// # }
     /// ```
@@ -751,6 +761,7 @@ impl PumpFun {
         &self,
         mint: Pubkey,
         amount_sol: u64,
+        track_volume: Option<bool>,
         slippage_basis_points: Option<u64>,
     ) -> Result<Vec<Instruction>, error::ClientError> {
         // Get accounts and calculate buy amounts
@@ -798,6 +809,7 @@ impl PumpFun {
             instructions::Buy {
                 amount: buy_amount,
                 max_sol_cost: buy_amount_with_slippage,
+                track_volume,
             },
         ));
 

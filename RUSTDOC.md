@@ -1,5 +1,17 @@
 # Pump.fun Solana Program SDK
 
+<!--toc:start-->
+
+- [Pump.fun Solana Program SDK](#pumpfun-solana-program-sdk)
+  - [Getting Started](#getting-started)
+  - [Usage](#usage)
+    - [Local Development](#local-development)
+  - [Features](#features)
+  - [Feature Flags](#feature-flags)
+  - [Architecture](#architecture)
+
+<!--toc:end-->
+
 This library provides a Rust interface for interacting with the Pump.fun Solana program.
 Pump.fun is a Solana-based marketplace that enables users to create and distribute their own tokens, primarily memecoins.
 
@@ -72,6 +84,10 @@ let metadata = CreateTokenMetadata {
     website: Some("https://example.com".to_string()),
 };
 
+
+// Track volume
+let track_volume = Some(true);
+
 // Optional priority fee to expedite transaction processing (e.g., 100 LAMPORTS per compute unit, equivalent to a 0.01 SOL priority fee)
 let fee = Some(PriorityFee {
     unit_limit: Some(100_000),
@@ -83,7 +99,7 @@ let signature = client.create(mint.insecure_clone(), metadata.clone(), fee).awai
 println!("Create signature: {}", signature);
 
 // Create and buy tokens with metadata
-let signature = client.create_and_buy(mint.insecure_clone(), metadata.clone(), sol_to_lamports(1f64), None, fee).await.unwrap();
+let signature = client.create_and_buy(mint.insecure_clone(), metadata.clone(), sol_to_lamports(1f64), track_volume, None, fee).await.unwrap();
 println!("Created and buy signature: {}", signature);
 
 // Print the curve
@@ -91,7 +107,7 @@ let curve = client.get_bonding_curve_account(&mint.pubkey()).await.unwrap();
 println!("Bonding curve: {:#?}", curve);
 
 // Buy tokens (ATA will be created automatically if needed)
-let signature = client.buy(mint.pubkey(), sol_to_lamports(1f64), None, fee).await.unwrap();
+let signature = client.buy(mint.pubkey(), sol_to_lamports(1f64), track_volume, None, fee).await.unwrap();
 println!("Buy signature: {}", signature);
 
 // Sell tokens (sell all tokens)
