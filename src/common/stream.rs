@@ -262,7 +262,7 @@ pub fn parse_event(
 ///     };
 ///
 ///     // Subscribe to events
-///     let subscription = pumpfun::common::stream::subscribe(cluster, None, callback).await?;
+///     let subscription = pumpfun::common::stream::subscribe(cluster, None, None, callback).await?;
 ///
 ///     // Keep subscription alive until program terminates
 ///     tokio::signal::ctrl_c().await?;

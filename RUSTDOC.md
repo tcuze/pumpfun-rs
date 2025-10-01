@@ -120,7 +120,7 @@ use pumpfun::common::stream::PumpFunEvent;
 
 // Subscribe to Pump.fun events
 # #[cfg(feature = "stream")]
-let subscription = client.subscribe(None, |signature, event, error, _response| {
+let subscription = client.subscribe(None, None, |signature, event, error, _response| {
     match event {
         Some(PumpFunEvent::Create(create_event)) => {
             println!("New token created: {} ({})", create_event.name, create_event.symbol);

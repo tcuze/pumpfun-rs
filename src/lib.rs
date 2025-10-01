@@ -556,7 +556,7 @@ impl PumpFun {
     /// # let client = PumpFun::new(payer, cluster);
     /// #
     /// // Subscribe to token events
-    /// let subscription = client.subscribe(None, |signature, event, error, _| {
+    /// let subscription = client.subscribe(None, None, |signature, event, error, _| {
     ///     match event {
     ///         Some(pumpfun::common::stream::PumpFunEvent::Create(create_event)) => {
     ///             println!("New token created: {} ({})", create_event.name, create_event.symbol);
