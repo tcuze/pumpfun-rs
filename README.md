@@ -1,5 +1,21 @@
 # Pump.fun Solana Program SDK
 
+<!--toc:start-->
+
+- [Pump.fun Solana Program SDK](#pumpfun-solana-program-sdk)
+  - [Overview](#overview)
+  - [Installation](#installation)
+  - [Usage](#usage)
+    - [Local Development](#local-development)
+  - [Features](#features)
+  - [Feature Flags](#feature-flags)
+  - [Architecture](#architecture)
+  - [Contributing](#contributing)
+  - [License](#license)
+  - [Disclaimer](#disclaimer)
+
+<!--toc:end-->
+
 ## Overview
 
 The `Pump.fun Solana Program SDK` is a Rust library that provides an interface for interacting with the Pump.fun Solana program. Pump.fun is a Solana-based marketplace enabling users to create and distribute their own tokens, primarily memecoins.
@@ -72,6 +88,9 @@ let metadata = CreateTokenMetadata {
     website: Some("https://example.com".to_string()),
 };
 
+// Track volume
+let track_volume = Some(true);
+
 // Optional priority fee to expedite transaction processing (e.g., 100 LAMPORTS per compute unit, equivalent to a 0.01 SOL priority fee)
 let fee = Some(PriorityFee {
     unit_limit: Some(100_000),
@@ -83,7 +102,7 @@ let signature = client.create(mint.insecure_clone(), metadata.clone(), fee).awai
 println!("Create signature: {}", signature);
 
 // Create and buy tokens with metadata
-let signature = client.create_and_buy(mint.insecure_clone(), metadata.clone(), sol_to_lamports(1f64), None, fee).await.unwrap();
+let signature = client.create_and_buy(mint.insecure_clone(), metadata.clone(), sol_to_lamports(1f64), track_volume, None, fee).await.unwrap();
 println!("Created and buy signature: {}", signature);
 
 // Print the curve
@@ -91,7 +110,7 @@ let curve = client.get_bonding_curve_account(&mint.pubkey()).await.unwrap();
 println!("Bonding curve: {:#?}", curve);
 
 // Buy tokens (ATA will be created automatically if needed)
-let signature = client.buy(mint.pubkey(), sol_to_lamports(1f64), None, fee).await.unwrap();
+let signature = client.buy(mint.pubkey(), sol_to_lamports(1f64), track_volume, None, fee).await.unwrap();
 println!("Buy signature: {}", signature);
 
 // Sell tokens (sell all tokens)
@@ -102,7 +121,7 @@ println!("Sell signature: {}", signature);
 use pumpfun::common::stream::PumpFunEvent;
 
 // Subscribe to Pump.fun events
-let subscription = client.subscribe(None, |signature, event, error, _response| {
+let subscription = client.subscribe(None, None, |signature, event, error, _response| {
     match event {
         Some(PumpFunEvent::Create(create_event)) => {
             println!("New token created: {} ({})", create_event.name, create_event.symbol);
@@ -159,16 +178,16 @@ To customize feature flags in your `Cargo.toml`:
 
 ```toml
 # Use default features (create-ata and close-ata enabled)
-pumpfun = "4.4.1"
+pumpfun = "4.6.0"
 
 # Disable all default features
-pumpfun = { version = "4.4.1", default-features = false }
+pumpfun = { version = "4.6.0", default-features = false }
 
 # Custom selection of features
-pumpfun = { version = "4.4.1", default-features = false, features = ["versioned-tx"] }
+pumpfun = { version = "4.6.0", default-features = false, features = ["versioned-tx"] }
 
 # Enable WebSocket event subscriptions
-pumpfun = { version = "4.4.1", features = ["stream"] }
+pumpfun = { version = "4.6.0", features = ["stream"] }
 ```
 
 ## Architecture

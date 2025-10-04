@@ -76,8 +76,8 @@ impl Sell {
 /// 10. Token program (readonly)
 /// 11. Event authority (readonly)
 /// 12. Pump.fun program ID (readonly)
-/// 13. Global volume accumulator (writable)
-/// 14. User volume accumulator (writable)
+/// 13. Fee configuration account (readonly)
+/// 14. Fee configuration program ID (readonly)
 pub fn sell(
     payer: &Keypair,
     mint: &Pubkey,
@@ -104,7 +104,7 @@ pub fn sell(
             AccountMeta::new_readonly(constants::accounts::EVENT_AUTHORITY, false),
             AccountMeta::new_readonly(constants::accounts::PUMPFUN, false),
             AccountMeta::new_readonly(constants::accounts::FEE_CONFIG, false),
-            AccountMeta::new_readonly(constants::accounts::FEE_PROGRAM, false),
+            AccountMeta::new_readonly(constants::accounts::FEE_CONFIG_PROGRAM, false),
         ],
     )
 }
