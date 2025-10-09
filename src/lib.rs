@@ -7,7 +7,6 @@ pub mod error;
 pub mod instructions;
 pub mod utils;
 
-use accounts::{BondingCurveAccount, GlobalAccount};
 use common::types::{Cluster, PriorityFee};
 use solana_client::nonblocking::rpc_client::RpcClient;
 use solana_sdk::{
