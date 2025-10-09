@@ -561,6 +561,48 @@ impl PumpFun {
         Ok(signature)
     }
 
+    pub async fn sell_offline_prepared(
+        &self,
+        mint: &Pubkey,
+        creator: &Pubkey,
+        amount_sol: u64,
+        amount_token: Option<u64>,
+        slippage_basis_points: Option<u64>,
+        priority_fee: Option<PriorityFee>,
+        global_account: &GlobalAccount,
+        close_ata: bool,
+        recent_blockhash: &Hash
+    ) -> Result<Signature, error::ClientError> {
+        // Add priority fee if provided or default to cluster priority fee
+        let priority_fee = priority_fee.unwrap_or(self.cluster.priority_fee);
+        let mut instructions = Self::get_priority_fee_instructions(&priority_fee);
+
+        // Add sell instruction
+        let sell_ix = self
+            .get_sell_instructions_offline_prepared(mint, creator, amount_sol, amount_token, slippage_basis_points, global_account, close_ata);
+        instructions.extend(sell_ix);
+
+        // Create and sign transaction
+        let transaction = get_transaction_offline_prepared(
+            recent_blockhash,
+            self.rpc.clone(),
+            self.payer.clone(),
+            &instructions,
+            None,
+            #[cfg(feature = "versioned-tx")]
+            None,
+        );
+
+        // Send and confirm transaction
+        let signature = self
+            .rpc
+            .send_and_confirm_transaction(&transaction)
+            .await
+            .map_err(error::ClientError::SolanaClientError)?;
+
+        Ok(signature)
+    }
+
     /// Subscribes to real-time events from the Pump.fun program
     ///
     /// This method establishes a WebSocket connection to the Solana cluster and subscribes
@@ -1055,6 +1097,70 @@ impl PumpFun {
 
         Ok(instructions)
     }
+
+    pub fn get_sell_instructions_offline_prepared(
+        &self,
+        mint: &Pubkey,
+        creator: &Pubkey,
+        amount_sol: u64,
+        amount_token: Option<u64>,
+        slippage_basis_points: Option<u64>,
+        global_account: &GlobalAccount,
+        close_ata: bool,
+    ) -> Vec<Instruction> {
+        // Get ATA
+        let ata: Pubkey = get_associated_token_address(&self.payer.pubkey(), &mint);
+
+        // Determine amount to sell
+        let amount = amount_token.unwrap();
+
+        // Calculate min sol output
+        let min_sol_output = utils::calculate_with_slippage_sell(
+            amount_sol,
+            slippage_basis_points.unwrap_or(500),
+        );
+
+        let mut instructions = Vec::new();
+
+        // Add sell instruction
+        instructions.push(instructions::sell(
+            &self.payer,
+            mint,
+            &global_account.fee_recipient,
+            creator,
+            instructions::Sell {
+                amount,
+                min_sol_output,
+            },
+        ));
+
+        // Close account if balance equals amount
+        #[cfg(feature = "close-ata")]
+        {
+            if close_ata
+            {
+                let token_program = constants::accounts::TOKEN_PROGRAM;
+                let _ = match close_account(
+                    &token_program,
+                    &ata,
+                    &self.payer.pubkey(),
+                    &self.payer.pubkey(),
+                    &[&self.payer.pubkey()],
+                )
+                {
+                    Ok(close_instruction)=>
+                    {
+                        instructions.push(close_instruction);
+                    },
+                    Err(e)=> {
+                        println!("Failed to get close ata instructions, {:?}", e);
+                    }
+                };
+            }
+        }
+        instructions
+    }
+
 
     /// Gets the Program Derived Address (PDA) for the global state account
     ///
