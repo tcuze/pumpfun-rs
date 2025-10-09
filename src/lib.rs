@@ -15,6 +15,7 @@ use solana_sdk::{
     pubkey::Pubkey,
     signature::{Keypair, Signature},
     signer::Signer,
+    hash::Hash
 };
 use spl_associated_token_account::get_associated_token_address;
 #[cfg(feature = "create-ata")]
@@ -23,6 +24,8 @@ use spl_associated_token_account::instruction::create_associated_token_account;
 use spl_token::instruction::close_account;
 use std::sync::Arc;
 use utils::transaction::get_transaction;
+
+use crate::{accounts::GlobalAccount, utils::transaction::get_transaction_offline_prepared};
 
 /// Main client for interacting with the Pump.fun program
 ///
@@ -396,6 +399,57 @@ impl PumpFun {
             None,
         )
         .await?;
+
+        // Send and confirm transaction
+        let signature = self
+            .rpc
+            .send_and_confirm_transaction(&transaction)
+            .await
+            .map_err(error::ClientError::SolanaClientError)?;
+
+        Ok(signature)
+    }
+    // ///  pub async fn get_buy_instructions_offline_prepared(
+    //     &self,
+    //     mint: Pubkey,
+    //     creator: Pubkey,
+    //     amount_sol: u64,
+    //     buy_amount: u64,
+    //     track_volume: Option<bool>,
+    //     slippage_basis_points: Option<u64>,
+    //     global_account: &GlobalAccount,
+    // ) -> Result<Vec<Instruction>, error::ClientError> {
+
+    pub async fn buy_offline_prepared(
+        &self,
+        mint: &Pubkey,
+        creator: &Pubkey,
+        amount_sol: u64,
+        buy_amount: u64,
+        track_volume: Option<bool>,
+        slippage_basis_points: Option<u64>,
+        priority_fee: Option<PriorityFee>,
+        global_account: &GlobalAccount,
+        recent_blockhash: &Hash,
+    ) -> Result<Signature, error::ClientError> {
+        // Add priority fee if provided or default to cluster priority fee
+        let priority_fee = priority_fee.unwrap_or(self.cluster.priority_fee);
+        let mut instructions = Self::get_priority_fee_instructions(&priority_fee);
+
+        // Add buy instruction offline_prepared
+        let buy_ix = self.get_buy_instructions_offline_prepared(mint, creator, amount_sol, buy_amount, track_volume, slippage_basis_points, global_account);
+        instructions.extend(buy_ix);
+
+        // Create and sign transaction
+        let transaction = get_transaction_offline_prepared(
+            recent_blockhash,
+            self.rpc.clone(),
+            self.payer.clone(),
+            &instructions,
+            None,
+            #[cfg(feature = "versioned-tx")]
+            None,
+        );
 
         // Send and confirm transaction
         let signature = self
@@ -817,6 +871,47 @@ impl PumpFun {
         ));
 
         Ok(instructions)
+    }
+
+    pub fn get_buy_instructions_offline_prepared(
+        &self,
+        mint: &Pubkey,
+        creator: &Pubkey,
+        amount_sol: u64,
+        buy_amount: u64,
+        track_volume: Option<bool>,
+        slippage_basis_points: Option<u64>,
+        global_account: &GlobalAccount,
+    ) -> Vec<Instruction> {
+        let buy_amount_with_slippage =
+            utils::calculate_with_slippage_buy(amount_sol, slippage_basis_points.unwrap_or(500));
+        let mut instructions = Vec::new();
+
+        // Create Associated Token Account if needed
+        #[cfg(feature = "create-ata")]
+        {
+            instructions.push(create_associated_token_account(
+                &self.payer.pubkey(),
+                &self.payer.pubkey(),
+                &mint,
+                &constants::accounts::TOKEN_PROGRAM,
+            ));
+        }
+
+        // Add buy instruction
+        instructions.push(instructions::buy(
+            &self.payer,
+            &mint,
+            &global_account.fee_recipient,
+            &creator,
+            instructions::Buy {
+                amount: buy_amount,
+                max_sol_cost: buy_amount_with_slippage,
+                track_volume,
+            },
+        ));
+
+        instructions
     }
 
     /// Generates instructions for selling tokens back to a bonding curve
