@@ -8,14 +8,9 @@ pub mod instructions;
 pub mod utils;
 
 use common::types::{Cluster, PriorityFee};
-use solana_client::nonblocking::rpc_client::RpcClient;
+use solana_client::{nonblocking::rpc_client::RpcClient, rpc_client::SerializableTransaction};
 use solana_sdk::{
-    compute_budget::ComputeBudgetInstruction,
-    instruction::Instruction,
-    pubkey::Pubkey,
-    signature::{Keypair, Signature},
-    signer::Signer,
-    hash::Hash
+    compute_budget::ComputeBudgetInstruction, hash::Hash, instruction::Instruction, pubkey::Pubkey, signature::{Keypair, Signature}, signer::Signer
 };
 use spl_associated_token_account::get_associated_token_address;
 #[cfg(feature = "create-ata")]
@@ -420,6 +415,40 @@ impl PumpFun {
     //     global_account: &GlobalAccount,
     // ) -> Result<Vec<Instruction>, error::ClientError> {
 
+    pub fn buy_instructions_offline_prepared(
+        &self,
+        mint: &Pubkey,
+        creator: &Pubkey,
+        amount_sol: u64,
+        buy_amount: u64,
+        track_volume: Option<bool>,
+        slippage_basis_points: Option<u64>,
+        priority_fee: Option<PriorityFee>,
+        global_account: &GlobalAccount,
+        recent_blockhash: &Hash,
+    ) -> impl SerializableTransaction {
+        // Add priority fee if provided or default to cluster priority fee
+        let priority_fee = priority_fee.unwrap_or(self.cluster.priority_fee);
+        let mut instructions = Self::get_priority_fee_instructions(&priority_fee);
+
+        // Add buy instruction offline_prepared
+        let buy_ix = self.get_buy_instructions_offline_prepared(mint, creator, amount_sol, buy_amount, track_volume, slippage_basis_points, global_account);
+        instructions.extend(buy_ix);
+
+        // Create and sign transaction
+        let transaction = get_transaction_offline_prepared(
+            recent_blockhash,
+            self.rpc.clone(),
+            self.payer.clone(),
+            &instructions,
+            None,
+            #[cfg(feature = "versioned-tx")]
+            None,
+        );
+        transaction
+    }
+
+
     pub async fn buy_offline_prepared(
         &self,
         mint: &Pubkey,
@@ -559,6 +588,40 @@ impl PumpFun {
             .map_err(error::ClientError::SolanaClientError)?;
 
         Ok(signature)
+    }
+
+    pub fn sell_instructions_offline_prepared(
+        &self,
+        mint: &Pubkey,
+        creator: &Pubkey,
+        amount_sol: u64,
+        amount_token: Option<u64>,
+        slippage_basis_points: Option<u64>,
+        priority_fee: Option<PriorityFee>,
+        global_account: &GlobalAccount,
+        close_ata: bool,
+        recent_blockhash: &Hash
+    ) -> impl SerializableTransaction {
+        // Add priority fee if provided or default to cluster priority fee
+        let priority_fee = priority_fee.unwrap_or(self.cluster.priority_fee);
+        let mut instructions = Self::get_priority_fee_instructions(&priority_fee);
+
+        // Add sell instruction
+        let sell_ix = self
+            .get_sell_instructions_offline_prepared(mint, creator, amount_sol, amount_token, slippage_basis_points, global_account, close_ata);
+        instructions.extend(sell_ix);
+
+        // Create and sign transaction
+        let transaction = get_transaction_offline_prepared(
+            recent_blockhash,
+            self.rpc.clone(),
+            self.payer.clone(),
+            &instructions,
+            None,
+            #[cfg(feature = "versioned-tx")]
+            None,
+        );
+        transaction
     }
 
     pub async fn sell_offline_prepared(
