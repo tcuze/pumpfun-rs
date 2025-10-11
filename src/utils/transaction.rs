@@ -178,7 +178,7 @@ pub fn get_transaction_offline_prepared(
     #[cfg(feature = "versioned-tx")] address_lookup_table_accounts: Option<
         &[AddressLookupTableAccount],
     >,
-) -> impl SerializableTransaction {
+) -> Result<impl SerializableTransaction, error::ClientError>  {
     // Create a combined signers array with payer and additional signers
     let mut all_signers =
         Vec::with_capacity(1 + additional_signers.map_or(0, |signers| signers.len()));
@@ -226,5 +226,5 @@ pub fn get_transaction_offline_prepared(
         }
     };
 
-    transaction
+    Ok(transaction)
 }

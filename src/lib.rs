@@ -426,7 +426,7 @@ impl PumpFun {
         priority_fee: Option<PriorityFee>,
         global_account: &GlobalAccount,
         recent_blockhash: &Hash,
-    ) -> impl SerializableTransaction {
+    ) -> Result<impl SerializableTransaction, error::ClientError>  {
         // Add priority fee if provided or default to cluster priority fee
         let priority_fee = priority_fee.unwrap_or(self.cluster.priority_fee);
         let mut instructions = Self::get_priority_fee_instructions(&priority_fee);
@@ -478,7 +478,7 @@ impl PumpFun {
             None,
             #[cfg(feature = "versioned-tx")]
             None,
-        );
+        )?;
 
         // Send and confirm transaction
         let signature = self
@@ -601,7 +601,7 @@ impl PumpFun {
         global_account: &GlobalAccount,
         close_ata: bool,
         recent_blockhash: &Hash
-    ) -> impl SerializableTransaction {
+    ) -> Result<impl SerializableTransaction, error::ClientError>  {
         // Add priority fee if provided or default to cluster priority fee
         let priority_fee = priority_fee.unwrap_or(self.cluster.priority_fee);
         let mut instructions = Self::get_priority_fee_instructions(&priority_fee);
@@ -654,7 +654,7 @@ impl PumpFun {
             None,
             #[cfg(feature = "versioned-tx")]
             None,
-        );
+        )?;
 
         // Send and confirm transaction
         let signature = self
