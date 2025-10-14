@@ -425,8 +425,7 @@ impl PumpFun {
         slippage_basis_points: Option<u64>,
         priority_fee: Option<PriorityFee>,
         global_account: &GlobalAccount,
-        recent_blockhash: &Hash,
-    ) -> Result<impl SerializableTransaction, error::ClientError>  {
+    ) -> Vec<Instruction> {
         // Add priority fee if provided or default to cluster priority fee
         let priority_fee = priority_fee.unwrap_or(self.cluster.priority_fee);
         let mut instructions = Self::get_priority_fee_instructions(&priority_fee);
@@ -434,18 +433,7 @@ impl PumpFun {
         // Add buy instruction offline_prepared
         let buy_ix = self.get_buy_instructions_offline_prepared(mint, creator, amount_sol, buy_amount, track_volume, slippage_basis_points, global_account);
         instructions.extend(buy_ix);
-
-        // Create and sign transaction
-        let transaction = get_transaction_offline_prepared(
-            recent_blockhash,
-            self.rpc.clone(),
-            self.payer.clone(),
-            &instructions,
-            None,
-            #[cfg(feature = "versioned-tx")]
-            None,
-        );
-        transaction
+        instructions
     }
 
 
@@ -590,28 +578,8 @@ impl PumpFun {
         Ok(signature)
     }
 
-    pub fn sell_instructions_offline_prepared(
-        &self,
-        mint: &Pubkey,
-        creator: &Pubkey,
-        amount_sol: u64,
-        amount_token: Option<u64>,
-        slippage_basis_points: Option<u64>,
-        priority_fee: Option<PriorityFee>,
-        global_account: &GlobalAccount,
-        close_ata: bool,
-        recent_blockhash: &Hash
-    ) -> Result<impl SerializableTransaction, error::ClientError>  {
-        // Add priority fee if provided or default to cluster priority fee
-        let priority_fee = priority_fee.unwrap_or(self.cluster.priority_fee);
-        let mut instructions = Self::get_priority_fee_instructions(&priority_fee);
-
-        // Add sell instruction
-        let sell_ix = self
-            .get_sell_instructions_offline_prepared(mint, creator, amount_sol, amount_token, slippage_basis_points, global_account, close_ata);
-        instructions.extend(sell_ix);
-
-        // Create and sign transaction
+    pub fn compile_instructions(&self, instructions: &Vec<Instruction>, recent_blockhash:&Hash) -> Result<impl SerializableTransaction, error::ClientError> 
+    {
         let transaction = get_transaction_offline_prepared(
             recent_blockhash,
             self.rpc.clone(),
@@ -622,6 +590,28 @@ impl PumpFun {
             None,
         );
         transaction
+    }
+
+    pub fn sell_instructions_offline_prepared(
+        &self,
+        mint: &Pubkey,
+        creator: &Pubkey,
+        amount_sol: u64,
+        amount_token: Option<u64>,
+        slippage_basis_points: Option<u64>,
+        priority_fee: Option<PriorityFee>,
+        global_account: &GlobalAccount,
+        close_ata: bool,
+    ) -> Vec<Instruction>  {
+        // Add priority fee if provided or default to cluster priority fee
+        let priority_fee = priority_fee.unwrap_or(self.cluster.priority_fee);
+        let mut instructions = Self::get_priority_fee_instructions(&priority_fee);
+
+        // Add sell instruction
+        let sell_ix = self
+            .get_sell_instructions_offline_prepared(mint, creator, amount_sol, amount_token, slippage_basis_points, global_account, close_ata);
+        instructions.extend(sell_ix);
+        instructions
     }
 
     pub async fn sell_offline_prepared(
