@@ -63,6 +63,7 @@ pub struct TradeEvent {
     pub total_claimed_tokens: u64,
     pub current_sol_volume: u64,
     pub last_update_timestamp: i64,
+    pub ix_name: String,
 }
 
 /// Event emitted when a bonding curve operation completes
