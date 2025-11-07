@@ -63,7 +63,7 @@ pub struct TradeEvent {
     pub total_claimed_tokens: u64,
     pub current_sol_volume: u64,
     pub last_update_timestamp: i64,
-    pub ix_name: Option<String>,
+    pub ix_name: String,
 }
 
 /// Event emitted when a bonding curve operation completes
@@ -166,22 +166,22 @@ pub fn parse_event(
     match discriminator {
         // CreateEvent
         [27, 114, 169, 77, 222, 235, 99, 118] => Ok(PumpFunEvent::Create(
-            CreateEvent::try_from_slice(&decoded[8..])
+            CreateEvent::from_slice_unchecked(&decoded[8..])
                 .map_err(|e| format!("Failed to decode CreateEvent: {}", e))?,
         )),
         // TradeEvent
         [189, 219, 127, 211, 78, 230, 97, 238] => Ok(PumpFunEvent::Trade(
-            TradeEvent::try_from_slice(&decoded[8..])
+            TradeEvent::from_slice_unchecked(&decoded[8..])
                 .map_err(|e| format!("Failed to decode TradeEvent: {}", e))?,
         )),
         // CompleteEvent
         [95, 114, 97, 156, 212, 46, 152, 8] => Ok(PumpFunEvent::Complete(
-            CompleteEvent::try_from_slice(&decoded[8..])
+            CompleteEvent::from_slice_unchecked(&decoded[8..])
                 .map_err(|e| format!("Failed to decode CompleteEvent: {}", e))?,
         )),
         // SetParamsEvent
         [223, 195, 159, 246, 62, 48, 143, 131] => Ok(PumpFunEvent::SetParams(
-            SetParamsEvent::try_from_slice(&decoded[8..])
+            SetParamsEvent::from_slice_unchecked(&decoded[8..])
                 .map_err(|e| format!("Failed to decode SetParamsEvent: {}", e))?,
         )),
         // Other unhandled Pump.fun events
