@@ -165,25 +165,28 @@ pub fn parse_event(
     let discriminator = &decoded[..8];
     match discriminator {
         // CreateEvent
-        [27, 114, 169, 77, 222, 235, 99, 118] => Ok(PumpFunEvent::Create(
-            CreateEvent::from_slice_unchecked(&decoded[8..])
-                .map_err(|e| format!("Failed to decode CreateEvent: {}", e))?,
-        )),
+        [27, 114, 169, 77, 222, 235, 99, 118] => {
+            let event = CreateEventEvent::deserialize(&mut &decoded[8..])
+            .map_err(|e| format!("Failed to decode CreateEvent: {}", e))?;
+            Ok(PumpFunEvent::Create(event.0))
+        }
         // TradeEvent
-        [189, 219, 127, 211, 78, 230, 97, 238] => Ok(PumpFunEvent::Trade(
-            TradeEvent::from_slice_unchecked(&decoded[8..])
-                .map_err(|e| format!("Failed to decode TradeEvent: {}", e))?,
-        )),
+        [189, 219, 127, 211, 78, 230, 97, 238] => {
+            let event = TradeEvent::deserialize(&mut &decoded[8..])
+            .map_err(|e| format!("Failed to decode TradeEvent: {}", e))?;
+            Ok(PumpFunEvent::Trade(event))
+        }
         // CompleteEvent
-        [95, 114, 97, 156, 212, 46, 152, 8] => Ok(PumpFunEvent::Complete(
-            CompleteEvent::from_slice_unchecked(&decoded[8..])
-                .map_err(|e| format!("Failed to decode CompleteEvent: {}", e))?,
-        )),
-        // SetParamsEvent
-        [223, 195, 159, 246, 62, 48, 143, 131] => Ok(PumpFunEvent::SetParams(
-            SetParamsEvent::from_slice_unchecked(&decoded[8..])
-                .map_err(|e| format!("Failed to decode SetParamsEvent: {}", e))?,
-        )),
+        [95, 114, 97, 156, 212, 46, 152, 8] => {
+            let event = CompleteEvent::deserialize(&mut &decoded[8..])
+            .map_err(|e| format!("Failed to decode CompleteEvent: {}", e))?;
+            Ok(PumpFunEvent::Complete(event))
+        }
+        [223, 195, 159, 246, 62, 48, 143, 131] => {
+            let event = SetParamsEvent::deserialize(&mut &decoded[8..])
+            .map_err(|e| format!("Failed to decode SetParamsEvent: {}", e))?;
+            Ok(PumpFunEvent::SetParams(event))
+        }
         // Other unhandled Pump.fun events
         [64, 69, 192, 104, 29, 30, 25, 107]
         | [245, 59, 70, 34, 75, 185, 109, 92]
