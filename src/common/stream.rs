@@ -168,7 +168,7 @@ pub fn parse_event(
         [27, 114, 169, 77, 222, 235, 99, 118] => {
             let event = <CreateEvent as BorshDeserialize>::deserialize(&mut &decoded[8..])
             .map_err(|e| format!("Failed to decode CreateEvent: {}", e))?;
-            Ok(PumpFunEvent::Create(event.0))
+            Ok(PumpFunEvent::Create(event))
         }
         // TradeEvent
         [189, 219, 127, 211, 78, 230, 97, 238] => {
